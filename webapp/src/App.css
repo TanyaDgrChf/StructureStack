@@ -1,0 +1,21 @@
+/* App.css */
+.App {
+  text-align: center;
+  padding-top: 100px;
+}
+
+.header {
+  padding: 20px;
+  color: #fff;
+}
+
+.loading-container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.content {
+  padding: 50px;
+}
