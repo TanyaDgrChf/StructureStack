@@ -19,24 +19,21 @@ pygame.display.set_caption("Insertion Sort Animation")
 arr = [random.randint(10, MAX_HEIGHT) for _ in range(NUM_BARS)]
 
 # Draw the bars
-def draw_bars(arr, highlight_index=None):
+def draw_bars(arr, highlight_indices=None):
     screen.fill(BACKGROUND_COLOR)
     for i, height in enumerate(arr):
-        color = SWAP_COLOR if highlight_index is not None and i == highlight_index else BAR_COLOR
+        color = SWAP_COLOR if highlight_indices and i in highlight_indices else BAR_COLOR
         pygame.draw.rect(screen, color, (i * BAR_WIDTH, HEIGHT - height, BAR_WIDTH - 2, height))
     pygame.display.flip()
 
-# Bubble Sort, yield when swap
+# Bubble Sort w/ yields
 def bubble_sort(arr):
     n = len(arr)
-    swapped = True
-    while swapped:
-        swapped = False
-        for i in range(1, n):
-            if arr[i - 1] > arr[i]:
-                arr[i - 1], arr[i] = arr[i], arr[i - 1]
-                swapped = True
-                yield i - 1, i
+    for i in range(n):
+        for j in range(1, n - i):
+            if arr[j - 1] > arr[j]:
+                arr[j - 1], arr[j] = arr[j], arr[j - 1]
+                yield j - 1, j
 
 # Control state: Wait for click
 started = False
@@ -59,8 +56,7 @@ while running:
     if started and not completed:
         try:
             highlight_index = next(sort_gen)
-            draw_bars(arr, highlight_index)
-            print(highlight_index)
+            draw_bars(arr, highlight_indices=highlight_index)
         except StopIteration:
             draw_bars(arr)
             completed = True

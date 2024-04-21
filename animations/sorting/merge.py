@@ -26,23 +26,54 @@ def draw_bars(arr, highlight_indices=None):
         pygame.draw.rect(screen, color, (i * BAR_WIDTH, HEIGHT - height, BAR_WIDTH - 2, height))
     pygame.display.flip()
 
-# Insertion Sort w/ yields
-def insertion_sort(arr):
-    for i in range(1, len(arr)):
-        key = arr[i]
-        j = i - 1
-        while j >= 0 and arr[j] > key:
-            arr[j + 1] = arr[j]
-            yield j  # Highlight swap
-            j -= 1
-        arr[j + 1] = key
-        yield j + 1  # Highlight insertion point
+# Merge Sort w/ yields
+def merge(arr, left, mid, right):
+    left_part = arr[left:mid+1]
+    right_part = arr[mid+1:right+1]
+
+    i, j, k = 0, 0, left
+    while i < len(left_part) and j < len(right_part):
+        if left_part[i] <= right_part[j]:
+            arr[k] = left_part[i]
+            i += 1
+        else:
+            arr[k] = right_part[j]
+            j += 1
+        k += 1
+        yield arr, [k - 1]  # Highlight the merged index
+
+    while i < len(left_part):
+        arr[k] = left_part[i]
+        i += 1
+        k += 1
+        yield arr, [k - 1]  # Highlight the merged index
+
+    while j < len(right_part):
+        arr[k] = right_part[j]
+        j += 1
+        k += 1
+        yield arr, [k - 1]  # Highlight the merged index
+
+# Merge Sort function that yields during merges
+def merge_sort(arr, left=0, right=None):
+    if right is None:
+        right = len(arr) - 1
+    
+    if left < right:
+        mid = (left + right) // 2
+        
+        # Recursive calls to sort both halves
+        yield from merge_sort(arr, left, mid)
+        yield from merge_sort(arr, mid + 1, right)
+        
+        # Merge both halves
+        yield from merge(arr, left, mid, right)
 
 # Control state: Wait for click
 started = False
 clock = pygame.time.Clock()
 
-sort_gen = insertion_sort(arr)  # Initialize generator
+sort_gen = merge_sort(arr)  # Initialize generator
 running = True
 completed = False  # Check sorting for done
 
@@ -58,12 +89,12 @@ while running:
 
     if started and not completed:
         try:
-            highlight_index = next(sort_gen)
-            draw_bars(arr, highlight_indices=highlight_index)
+            state = next(sort_gen)
+            arr, highlight_indices = state
+            draw_bars(arr, highlight_indices)
         except StopIteration:
             draw_bars(arr)
             completed = True
-
     clock.tick(5)  # Animation speed
 
 pygame.quit()

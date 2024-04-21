@@ -10,7 +10,8 @@ NUM_BARS = WIDTH // BAR_WIDTH
 MAX_HEIGHT = HEIGHT - 50
 BACKGROUND_COLOR = (30, 30, 30)
 BAR_COLOR = (70, 130, 180)
-SWAP_COLOR = (255, 99, 71)
+PIVOT_COLOR = (255, 99, 71)
+SWAP_COLOR = (255, 165, 0)
 
 # Initialize Pygame
 pygame.init()
@@ -19,30 +20,44 @@ pygame.display.set_caption("Insertion Sort Animation")
 arr = [random.randint(10, MAX_HEIGHT) for _ in range(NUM_BARS)]
 
 # Draw the bars
-def draw_bars(arr, highlight_indices=None):
+def draw_bars(arr, pivot_index=None, highlight_indices=None):
     screen.fill(BACKGROUND_COLOR)
     for i, height in enumerate(arr):
-        color = SWAP_COLOR if highlight_indices and i in highlight_indices else BAR_COLOR
+        if i == pivot_index:
+            color = PIVOT_COLOR
+        elif highlight_indices and i in highlight_indices:
+            color = SWAP_COLOR
+        else:
+            color = BAR_COLOR
         pygame.draw.rect(screen, color, (i * BAR_WIDTH, HEIGHT - height, BAR_WIDTH - 2, height))
     pygame.display.flip()
+# Quick Sort w/ yields
+def partition(arr, low, high):
+    pivot = arr[high]
+    i = low - 1
+    for j in range(low, high):
+        if arr[j] <= pivot:
+            i += 1
+            arr[i], arr[j] = arr[j], arr[i]
+            yield arr, high, [i, j]
+    arr[i + 1], arr[high] = arr[high], arr[i + 1]
+    yield arr, high, [i + 1, high] 
+    return i + 1 
 
-# Insertion Sort w/ yields
-def insertion_sort(arr):
-    for i in range(1, len(arr)):
-        key = arr[i]
-        j = i - 1
-        while j >= 0 and arr[j] > key:
-            arr[j + 1] = arr[j]
-            yield j  # Highlight swap
-            j -= 1
-        arr[j + 1] = key
-        yield j + 1  # Highlight insertion point
-
+def quick_sort(arr, low=0, high=None):
+    if high is None:
+        high = len(arr) - 1
+    
+    if low < high:
+        pi = next(partition(arr, low, high))
+        pivot_index = pi[2][1]
+        yield from quick_sort(arr, low, pivot_index - 1)
+        yield from quick_sort(arr, pivot_index + 1, high)
 # Control state: Wait for click
 started = False
 clock = pygame.time.Clock()
 
-sort_gen = insertion_sort(arr)  # Initialize generator
+sort_gen = quick_sort(arr)  # Initialize generator
 running = True
 completed = False  # Check sorting for done
 
@@ -58,8 +73,9 @@ while running:
 
     if started and not completed:
         try:
-            highlight_index = next(sort_gen)
-            draw_bars(arr, highlight_indices=highlight_index)
+            state = next(sort_gen)
+            arr, pivot_index, highlight_indices = state
+            draw_bars(arr, pivot_index, highlight_indices)
         except StopIteration:
             draw_bars(arr)
             completed = True

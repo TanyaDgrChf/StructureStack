@@ -26,23 +26,24 @@ def draw_bars(arr, highlight_indices=None):
         pygame.draw.rect(screen, color, (i * BAR_WIDTH, HEIGHT - height, BAR_WIDTH - 2, height))
     pygame.display.flip()
 
-# Insertion Sort w/ yields
-def insertion_sort(arr):
-    for i in range(1, len(arr)):
-        key = arr[i]
-        j = i - 1
-        while j >= 0 and arr[j] > key:
-            arr[j + 1] = arr[j]
-            yield j  # Highlight swap
-            j -= 1
-        arr[j + 1] = key
-        yield j + 1  # Highlight insertion point
+# Selection Sort w/ yields
+def selection_sort(arr):
+    n = len(arr)
+    for i in range(n):
+        min_idx = i
+        # Find the minimum element in the unsorted portion
+        for j in range(i + 1, n):
+            if arr[j] < arr[min_idx]:
+                min_idx = j
+        # Swap the minimum element with the first element in the unsorted portion
+        arr[i], arr[min_idx] = arr[min_idx], arr[i]
+        yield i, min_idx
 
 # Control state: Wait for click
 started = False
 clock = pygame.time.Clock()
 
-sort_gen = insertion_sort(arr)  # Initialize generator
+sort_gen = selection_sort(arr)  # Initialize generator
 running = True
 completed = False  # Check sorting for done
 
